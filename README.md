@@ -11,3 +11,9 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/dungvip01xyz/dungx/re
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/dungvip01xyz/dungx/refs/heads/main/hop.lua"))()
 ```
+### data 
+
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/dungvip01xyz/dungx/refs/heads/main/data.lua"))()
+```
+
