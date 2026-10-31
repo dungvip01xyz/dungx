@@ -18,68 +18,6 @@ local currentTween = nil
 local currentTarget = nil
 local running = true
 local cameraConnection = nil
-local CoreGui = game:GetService("CoreGui")
-
-pcall(function()
-    CoreGui:FindFirstChild("PumpkinGUI"):Destroy()
-end)
-
-local gui = Instance.new("ScreenGui")
-gui.Name = "PumpkinGUI"
-gui.ResetOnSpawn = false
-gui.Parent = CoreGui
-
-local frame = Instance.new("Frame")
-frame.Size = UDim2.fromOffset(215, 205)
-frame.Position = UDim2.new(0, 15, 0, 15)
-frame.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
-frame.Active = true
-frame.Draggable = true
-frame.Parent = gui
-
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 9)
-
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 32)
-title.BackgroundTransparency = 1
-title.Text = "PUMPKIN HUNT"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.TextSize = 16
-title.Parent = frame
-
-local status = Instance.new("TextLabel")
-status.Size = UDim2.new(1, -10, 0, 25)
-status.Position = UDim2.fromOffset(5, 32)
-status.BackgroundTransparency = 1
-status.Text = "LOCK CAMERA: ON"
-status.TextColor3 = Color3.fromRGB(100, 220, 130)
-status.TextSize = 12
-status.Parent = frame
-
-local function CreateButton(name, y)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 38)
-    btn.Position = UDim2.fromOffset(10, y)
-    btn.BackgroundColor3 = Color3.fromRGB(150, 45, 45)
-    btn.Text = name .. ": OFF"
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.TextSize = 14
-    btn.Parent = frame
-
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    return btn
-end
-
-local pumpkinBtn = CreateButton("AUTO PUMPKIN", 62)
-local clickBtn = CreateButton("AUTO CLICK", 107)
-local lockBtn = CreateButton("LOCK CAMERA", 152)
-
-local function UpdateButton(btn, name, value)
-    btn.Text = name .. (value and ": ON" or ": OFF")
-    btn.BackgroundColor3 = value
-        and Color3.fromRGB(35, 145, 75)
-        or Color3.fromRGB(150, 45, 45)
-end
 
 -- KIEM TRA PUMPKIN
 local function IsValid(part)
@@ -87,6 +25,7 @@ local function IsValid(part)
         and part.Parent
         and part:IsDescendantOf(workspace)
 end
+
 -- Auto Buso Haki
 getgenv().AutoBuso = true
 
@@ -104,6 +43,7 @@ spawn(function()
         end
     end
 end)
+
 getgenv().AutoSelectMelee = true
 
 spawn(function()
@@ -112,13 +52,11 @@ spawn(function()
             pcall(function()
                 local plr = game.Players.LocalPlayer
                 
-                -- Ưu tiên lấy Melee trong Character trước
                 local equipped = plr.Character and plr.Character:FindFirstChildOfClass("Tool")
                 if equipped and equipped.ToolTip == "Melee" then
-                    return -- Đã cầm Melee rồi thì thôi
+                    return
                 end
                 
-                -- Tìm Melee trong Backpack
                 for _, tool in pairs(plr.Backpack:GetChildren()) do
                     if tool:IsA("Tool") and tool.ToolTip == "Melee" then
                         plr.Character.Humanoid:EquipTool(tool)
@@ -129,6 +67,7 @@ spawn(function()
         end
     end
 end)
+
 -- TIM PUMPKIN GAN NHAT
 local function FindPumpkin()
     local char = LocalPlayer.Character
@@ -216,12 +155,9 @@ task.spawn(function()
 
             if part then
                 currentTarget = part
-                status.Text = "Dang den Pumpkin..."
-
                 Tween2(part)
             else
                 currentTarget = nil
-                status.Text = "Dang tim Pumpkin..."
                 CancelTween()
             end
 
@@ -296,39 +232,5 @@ local function StopLockCamera()
     end
 end
 
--- BUTTON PUMPKIN
-pumpkinBtn.MouseButton1Click:Connect(function()
-    AutoPumpkin = not AutoPumpkin
-
-    UpdateButton(pumpkinBtn, "AUTO PUMPKIN", AutoPumpkin)
-
-    if not AutoPumpkin then
-        CancelTween()
-        currentTarget = nil
-        status.Text = "Da dung Pumpkin"
-    else
-        status.Text = "Dang tim Pumpkin..."
-    end
-end)
-
--- BUTTON CLICK
-clickBtn.MouseButton1Click:Connect(function()
-    AutoClick = not AutoClick
-    UpdateButton(clickBtn, "AUTO CLICK", AutoClick)
-end)
-
--- BUTTON LOCK
-lockBtn.MouseButton1Click:Connect(function()
-    LockCamera = not LockCamera
-
-    UpdateButton(lockBtn, "LOCK CAMERA", LockCamera)
-
-    if LockCamera then
-        StartLockCamera()
-    else
-        StopLockCamera()
-    end
-end)
-UpdateButton(lockBtn, "LOCK CAMERA", true)
 StartLockCamera()
-print("PUMPKIN GUI LOADED")
+print("PUMPKIN SCRIPT LOADED")
