@@ -178,7 +178,7 @@ local function Tween2(part)
     local tween = TweenService:Create(
         root,
         TweenInfo.new(
-            math.max(distance / 350, 0.05),
+            math.max(distance / 100, 0.05),
             Enum.EasingStyle.Linear
         ),
         {CFrame = part.CFrame}
