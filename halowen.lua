@@ -19,9 +19,9 @@ local currentTarget = nil
 local running = true
 local cameraConnection = nil
 
-local FLY_HEIGHT = 10 -- do cao bay len
+local FLY_HEIGHT = 100 -- do cao bay len
 local SPEED = 170       -- toc do
-local CLOSE_RANGE = 2   -- neu gan hon 2m thi di chuyen truc tiep
+local CLOSE_RANGE = 2   -- neu gan hon 2m thi dung TweenDirect
 
 -- KIEM TRA PUMPKIN
 local function IsValid(part)
@@ -150,7 +150,7 @@ local function TweenTo(targetCFrame)
 end
 
 -- ============================================================
--- TWEEN TRUC TIEP (logic cu) - dung khi da o gan
+-- TWEEN TRUC TIEP - dung khi pumpkin gan (<= 2m)
 -- ============================================================
 local function TweenDirect(part)
     local char = LocalPlayer.Character
@@ -194,7 +194,7 @@ local function TweenDirect(part)
 end
 
 -- ============================================================
--- BAY: LEN -> NGANG -> XUONG (3 doan) - dung khi o xa
+-- FLY: LEN -> NGANG -> XUONG - dung khi pumpkin o xa (> 2m)
 -- ============================================================
 local function FlyTo(targetCFrame)
     local character = LocalPlayer.Character
@@ -248,10 +248,10 @@ task.spawn(function()
                     local distance = (part.Position - root.Position).Magnitude
 
                     if distance <= CLOSE_RANGE then
-                        -- Da o gan (<= 2m): dung logic cu de tiep can
+                        -- Pumpkin gan (<= 2m): di chuyen truc tiep
                         TweenDirect(part)
                     else
-                        -- O xa: bay len -> ngang -> xuong
+                        -- Pumpkin xa (> 2m): bay len -> ngang -> xuong
                         FlyTo(part.CFrame)
                     end
                 end
