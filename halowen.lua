@@ -19,7 +19,7 @@ local currentTarget = nil
 local running = true
 local cameraConnection = nil
 
-local FLY_HEIGHT = 100 -- do cao bay len
+local FLY_HEIGHT = 10 -- do cao bay len
 local SPEED = 170       -- toc do
 local CLOSE_RANGE = 2   -- neu gan hon 2m thi di chuyen truc tiep
 
