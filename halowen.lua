@@ -21,6 +21,7 @@ local cameraConnection = nil
 
 local FLY_HEIGHT = 100 -- do cao bay len
 local SPEED = 170       -- toc do
+local CLOSE_RANGE = 2   -- neu gan hon 2m thi di chuyen truc tiep
 
 -- KIEM TRA PUMPKIN
 local function IsValid(part)
@@ -149,7 +150,51 @@ local function TweenTo(targetCFrame)
 end
 
 -- ============================================================
--- BAY: LEN -> NGANG -> XUONG (3 doan)
+-- TWEEN TRUC TIEP (logic cu) - dung khi da o gan
+-- ============================================================
+local function TweenDirect(part)
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+
+    if not root or not IsValid(part) then return end
+
+    local distance = (part.Position - root.Position).Magnitude
+
+    local tween = TweenService:Create(
+        root,
+        TweenInfo.new(
+            math.max(distance / 100, 0.05),
+            Enum.EasingStyle.Linear
+        ),
+        {CFrame = part.CFrame}
+    )
+
+    currentTween = tween
+    tween:Play()
+
+    while AutoPumpkin do
+        if not IsValid(part) then break end
+        if not root.Parent or LocalPlayer.Character ~= char then break end
+
+        if (root.Position - part.Position).Magnitude <= 5 then
+            break
+        end
+
+        if tween.PlaybackState ~= Enum.PlaybackState.Playing then
+            break
+        end
+
+        task.wait(0.05)
+    end
+
+    if currentTween == tween then
+        tween:Cancel()
+        currentTween = nil
+    end
+end
+
+-- ============================================================
+-- BAY: LEN -> NGANG -> XUONG (3 doan) - dung khi o xa
 -- ============================================================
 local function FlyTo(targetCFrame)
     local character = LocalPlayer.Character
@@ -195,7 +240,21 @@ task.spawn(function()
 
             if part then
                 currentTarget = part
-                FlyTo(part.CFrame)
+
+                local char = LocalPlayer.Character
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+
+                if root then
+                    local distance = (part.Position - root.Position).Magnitude
+
+                    if distance <= CLOSE_RANGE then
+                        -- Da o gan (<= 2m): dung logic cu de tiep can
+                        TweenDirect(part)
+                    else
+                        -- O xa: bay len -> ngang -> xuong
+                        FlyTo(part.CFrame)
+                    end
+                end
             else
                 currentTarget = nil
                 CancelTween()
@@ -273,4 +332,4 @@ local function StopLockCamera()
 end
 
 StartLockCamera()
-print("PUMPKIN SCRIPT LOADED (FLY MODE)")
+print("PUMPKIN SCRIPT LOADED (HYBRID MODE)")
