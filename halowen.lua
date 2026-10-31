@@ -19,10 +19,6 @@ local currentTarget = nil
 local running = true
 local cameraConnection = nil
 
-local FLY_HEIGHT = 100 -- do cao bay len
-local SPEED = 170       -- toc do
-local CLOSE_RANGE = 2   -- neu gan hon 2m thi dung TweenDirect
-
 -- KIEM TRA PUMPKIN
 local function IsValid(part)
     return part
@@ -104,55 +100,18 @@ end
 -- HUY TWEEN
 local function CancelTween()
     if currentTween then
-        pcall(function() currentTween:Cancel() end)
+        currentTween:Cancel()
         currentTween = nil
     end
 end
 
--- ============================================================
--- TWEEN 1 DOAN
--- ============================================================
-local function TweenTo(targetCFrame)
-    local character = LocalPlayer.Character
-    if not character then return end
-
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-
-    local distance = (targetCFrame.Position - root.Position).Magnitude
-
-    if distance < 1 then
-        return
+-- TWEEN
+local function Tween2(part)
+    wait(1)
+    local human = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if human then
+        human:ChangeState(Enum.HumanoidStateType.Jumping)
     end
-
-    local tweenInfo = TweenInfo.new(
-        distance / SPEED,
-        Enum.EasingStyle.Linear,
-        Enum.EasingDirection.Out
-    )
-
-    local tween = TweenService:Create(
-        root,
-        tweenInfo,
-        {
-            CFrame = targetCFrame
-        }
-    )
-
-    currentTween = tween
-
-    tween:Play()
-    tween.Completed:Wait()
-
-    if currentTween == tween then
-        currentTween = nil
-    end
-end
-
--- ============================================================
--- TWEEN TRUC TIEP - dung khi pumpkin gan (<= 2m)
--- ============================================================
-local function TweenDirect(part)
     local char = LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
 
@@ -191,45 +150,7 @@ local function TweenDirect(part)
         tween:Cancel()
         currentTween = nil
     end
-end
 
--- ============================================================
--- FLY: LEN -> NGANG -> XUONG - dung khi pumpkin o xa (> 2m)
--- ============================================================
-local function FlyTo(targetCFrame)
-    local character = LocalPlayer.Character
-    if not character then return end
-
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-
-    local startPos = root.Position
-    local targetPos = targetCFrame.Position
-
-    -- DIEM 1: BAY THANG LEN
-    local height = math.max(startPos.Y, targetPos.Y) + FLY_HEIGHT
-
-    local pointUp = Vector3.new(
-        startPos.X,
-        height,
-        startPos.Z
-    )
-
-    TweenTo(CFrame.new(pointUp))
-
-    -- DIEM 2: BAY NGANG (giu nguyen do cao)
-    local pointAboveChest = Vector3.new(
-        targetPos.X,
-        height,
-        targetPos.Z
-    )
-
-    TweenTo(CFrame.new(pointAboveChest))
-
-    -- DIEM 3: BAY THANG XUONG
-    TweenTo(CFrame.new(targetPos))
-
-    task.wait(0.3)
 end
 
 -- AUTO PUMPKIN
@@ -240,29 +161,15 @@ task.spawn(function()
 
             if part then
                 currentTarget = part
-
-                local char = LocalPlayer.Character
-                local root = char and char:FindFirstChild("HumanoidRootPart")
-
-                if root then
-                    local distance = (part.Position - root.Position).Magnitude
-
-                    if distance <= CLOSE_RANGE then
-                        -- Pumpkin gan (<= 2m): di chuyen truc tiep
-                        TweenDirect(part)
-                    else
-                        -- Pumpkin xa (> 2m): bay len -> ngang -> xuong
-                        FlyTo(part.CFrame)
-                    end
-                end
+                Tween2(part)
             else
                 currentTarget = nil
                 CancelTween()
             end
 
-            task.wait(2)
+            task.wait(0.05)
         else
-            task.wait(2)
+            task.wait(0.2)
         end
     end
 end)
@@ -332,4 +239,4 @@ local function StopLockCamera()
 end
 
 StartLockCamera()
-print("PUMPKIN SCRIPT LOADED (HYBRID MODE)")
+print("PUMPKIN SCRIPT LOADED")
