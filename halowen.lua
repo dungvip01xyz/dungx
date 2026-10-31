@@ -260,9 +260,9 @@ task.spawn(function()
                 CancelTween()
             end
 
-            task.wait(3)
+            task.wait(2)
         else
-            task.wait(3)
+            task.wait(2)
         end
     end
 end)
