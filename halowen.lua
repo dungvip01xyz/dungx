@@ -19,6 +19,9 @@ local currentTarget = nil
 local running = true
 local cameraConnection = nil
 
+local FLY_HEIGHT = 100 -- do cao bay len
+local SPEED = 170       -- toc do
+
 -- KIEM TRA PUMPKIN
 local function IsValid(part)
     return part
@@ -100,51 +103,88 @@ end
 -- HUY TWEEN
 local function CancelTween()
     if currentTween then
-        currentTween:Cancel()
+        pcall(function() currentTween:Cancel() end)
         currentTween = nil
     end
 end
 
--- TWEEN
-local function Tween2(part)
-    local char = LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
+-- ============================================================
+-- TWEEN 1 DOAN
+-- ============================================================
+local function TweenTo(targetCFrame)
+    local character = LocalPlayer.Character
+    if not character then return end
 
-    if not root or not IsValid(part) then return end
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
 
-    local distance = (part.Position - root.Position).Magnitude
+    local distance = (targetCFrame.Position - root.Position).Magnitude
+
+    if distance < 1 then
+        return
+    end
+
+    local tweenInfo = TweenInfo.new(
+        distance / SPEED,
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.Out
+    )
 
     local tween = TweenService:Create(
         root,
-        TweenInfo.new(
-            math.max(distance / 100, 0.05),
-            Enum.EasingStyle.Linear
-        ),
-        {CFrame = part.CFrame}
+        tweenInfo,
+        {
+            CFrame = targetCFrame
+        }
     )
 
     currentTween = tween
+
     tween:Play()
-
-    while AutoPumpkin do
-        if not IsValid(part) then break end
-        if not root.Parent or LocalPlayer.Character ~= char then break end
-
-        if (root.Position - part.Position).Magnitude <= 5 then
-            break
-        end
-
-        if tween.PlaybackState ~= Enum.PlaybackState.Playing then
-            break
-        end
-
-        task.wait(0.05)
-    end
+    tween.Completed:Wait()
 
     if currentTween == tween then
-        tween:Cancel()
         currentTween = nil
     end
+end
+
+-- ============================================================
+-- BAY: LEN -> NGANG -> XUONG (3 doan)
+-- ============================================================
+local function FlyTo(targetCFrame)
+    local character = LocalPlayer.Character
+    if not character then return end
+
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local startPos = root.Position
+    local targetPos = targetCFrame.Position
+
+    -- DIEM 1: BAY THANG LEN
+    local height = math.max(startPos.Y, targetPos.Y) + FLY_HEIGHT
+
+    local pointUp = Vector3.new(
+        startPos.X,
+        height,
+        startPos.Z
+    )
+
+    TweenTo(CFrame.new(pointUp))
+
+    -- DIEM 2: BAY NGANG (giu nguyen do cao)
+    local pointAboveChest = Vector3.new(
+        targetPos.X,
+        height,
+        targetPos.Z
+    )
+
+    TweenTo(CFrame.new(pointAboveChest))
+
+    -- DIEM 3: BAY THANG XUONG
+    TweenTo(CFrame.new(targetPos))
+
+    task.wait(0.3)
 end
 
 -- AUTO PUMPKIN
@@ -155,7 +195,7 @@ task.spawn(function()
 
             if part then
                 currentTarget = part
-                Tween2(part)
+                FlyTo(part.CFrame)
             else
                 currentTarget = nil
                 CancelTween()
@@ -233,4 +273,4 @@ local function StopLockCamera()
 end
 
 StartLockCamera()
-print("PUMPKIN SCRIPT LOADED")
+print("PUMPKIN SCRIPT LOADED (FLY MODE)")
