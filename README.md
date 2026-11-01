@@ -16,7 +16,11 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/dungvip01xyz/dungx/re
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/dungvip01xyz/dungx/refs/heads/main/data.lua"))()
 ```
+### halloweenv2 
 
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/dungvip01xyz/dungx/refs/heads/main/halloweenv2.lua"))()
+```
 ### halowen 
 
 ```lua
