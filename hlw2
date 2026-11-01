@@ -1,0 +1,268 @@
+wait(5)
+local args = {
+    [1] = "SetTeam",
+    [2] = "Pirates"
+}
+game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+wait(5)
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local VIM = game:GetService("VirtualInputManager")
+
+local LocalPlayer = Players.LocalPlayer
+local AutoPumpkin = true
+local currentTween = nil
+local currentTarget = nil
+local running = true
+-- Chỉ Attack Pumpkin quanh nhân vật
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Player = Players.LocalPlayer
+
+local Folder = workspace:WaitForChild("PumpkinHunt")
+local Net = ReplicatedStorage.Modules.Net
+local RegisterAttack = Net["RE/RegisterAttack"]
+local RegisterHit = Net["RE/RegisterHit"]
+
+local Range = 40          -- Tầm đánh
+local AttackDelay = 0.04
+
+getgenv().PumpkinAttack = true
+
+-- KIEM TRA PUMPKIN
+local function IsValid(part)
+    return part
+        and part.Parent
+        and part:IsDescendantOf(workspace)
+end
+
+-- Auto Buso Haki
+getgenv().AutoBuso = true
+
+spawn(function()
+    while task.wait(0.5) do
+        if getgenv().AutoBuso then
+            pcall(function()
+                local plr = game.Players.LocalPlayer
+                local char = plr.Character
+                
+                if char and not char:FindFirstChild("HasBuso") then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
+                end
+            end)
+        end
+    end
+end)
+
+getgenv().AutoSelectMelee = true
+
+spawn(function()
+    while task.wait(0.5) do
+        if getgenv().AutoSelectMelee then
+            pcall(function()
+                local plr = game.Players.LocalPlayer
+                
+                local equipped = plr.Character and plr.Character:FindFirstChildOfClass("Tool")
+                if equipped and equipped.ToolTip == "Melee" then
+                    return
+                end
+                
+                for _, tool in pairs(plr.Backpack:GetChildren()) do
+                    if tool:IsA("Tool") and tool.ToolTip == "Melee" then
+                        plr.Character.Humanoid:EquipTool(tool)
+                        break
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- TIM PUMPKIN GAN NHAT
+local function FindPumpkin()
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+
+    if not root then return nil end
+
+    local nearest = nil
+    local minDistance = math.huge
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj.Name == "Pumpkin" then
+            local part = obj:IsA("BasePart") and obj
+                or obj:FindFirstChildWhichIsA("BasePart", true)
+
+            if IsValid(part) then
+                local distance = (part.Position - root.Position).Magnitude
+
+                if distance < minDistance then
+                    minDistance = distance
+                    nearest = part
+                end
+            end
+        end
+    end
+
+    return nearest
+end
+
+-- HUY TWEEN
+local function CancelTween()
+    if currentTween then
+        currentTween:Cancel()
+        currentTween = nil
+    end
+end
+
+-- TWEEN
+local function Tween2(part)
+    wait(1)
+    local human = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if human then
+        human:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+
+    if not root or not IsValid(part) then return end
+
+    local distance = (part.Position - root.Position).Magnitude
+
+    local tween = TweenService:Create(
+        root,
+        TweenInfo.new(
+            math.max(distance / 100, 0.05),
+            Enum.EasingStyle.Linear
+        ),
+        {CFrame = part.CFrame}
+    )
+
+    currentTween = tween
+    tween:Play()
+
+    while AutoPumpkin do
+        if not IsValid(part) then break end
+        if not root.Parent or LocalPlayer.Character ~= char then break end
+
+        if (root.Position - part.Position).Magnitude <= 5 then
+            break
+        end
+
+        if tween.PlaybackState ~= Enum.PlaybackState.Playing then
+            break
+        end
+
+        task.wait(0.05)
+    end
+
+    if currentTween == tween then
+        tween:Cancel()
+        currentTween = nil
+    end
+
+end
+
+-- AUTO PUMPKIN
+task.spawn(function()
+    while running do
+        if AutoPumpkin then
+            local part = FindPumpkin()
+
+            if part then
+                currentTarget = part
+                Tween2(part)
+            else
+                currentTarget = nil
+                CancelTween()
+            end
+
+            task.wait(0.05)
+        else
+            task.wait(0.2)
+        end
+    end
+end)
+
+local function GetHRP()
+    local Char = Player.Character
+    if not Char then return end
+    return Char:FindFirstChild("HumanoidRootPart")
+end
+
+local function GetRoot(Model)
+    return Model:FindFirstChild("RootPart", true) or Model:FindFirstChild("HumanoidRootPart", true)
+end
+
+local function IsPumpkinPart(Part)
+    return Part:IsA("BasePart") and Part.Name:lower():find("pumpkin")
+end
+
+local function GetNearbyPumpkins()
+    local Result = {}
+    local HRP = GetHRP()
+    if not HRP then return Result end
+
+    local function Check(Model)
+        if not Model:IsA("Model") then return end
+        local Root = GetRoot(Model)
+        if not Root then return end
+
+        if (HRP.Position - Root.Position).Magnitude > Range then return end
+
+        local Parts = {}
+        for _, v in ipairs(Model:GetDescendants()) do
+            if IsPumpkinPart(v) then
+                table.insert(Parts, v)
+            end
+        end
+        if #Parts == 0 then
+            table.insert(Parts, Root)
+        end
+
+        table.insert(Result, {Root = Root, Parts = Parts})
+    end
+
+    for _, Obj in ipairs(Folder:GetChildren()) do
+        Check(Obj)
+        for _, Child in ipairs(Obj:GetChildren()) do
+            Check(Child)
+        end
+    end
+    return Result
+end
+
+-- Hàm Attack
+local function AttackPumpkin()
+    local Nearby = GetNearbyPumpkins()
+    if #Nearby == 0 then return end
+
+    pcall(function()
+        RegisterAttack:FireServer(0.5, 1)
+
+        for _, Data in ipairs(Nearby) do
+            if not getgenv().PumpkinAttack then return end
+            for _, Part in ipairs(Data.Parts) do
+                if Part and Part.Parent then
+                    RegisterHit:FireServer(Part)
+                end
+            end
+            if Data.Root and Data.Root.Parent then
+                RegisterHit:FireServer(Data.Root)
+            end
+        end
+    end)
+end
+
+-- Chạy liên tục
+task.spawn(function()
+    while getgenv().PumpkinAttack do
+        if Player.Character and Player.Character.Parent then
+            AttackPumpkin()
+        end
+        task.wait(AttackDelay)
+    end
+end)
+
+print("Attack Pumpkin đã bật")
