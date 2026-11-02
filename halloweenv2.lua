@@ -34,7 +34,7 @@ local Running = true
 local ScanDelay = 0.1
 
 local FlyHeight = 8
-local FlySpeed = 220
+local FlySpeed = 350
 
 getgenv().AutoSelectMelee = true
 getgenv().PumpkinNoClip = true
